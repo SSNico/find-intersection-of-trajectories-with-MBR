@@ -1,0 +1,46 @@
+package code;
+
+import java.util.Vector;
+
+public class Trajectory {
+	private int trajectoryId;
+	private Vector<Segment> segments;
+	
+	public Trajectory() {
+		super();
+	}
+
+	public Trajectory(int trajectoryId, Vector<Segment> segments) {
+		super();
+		this.trajectoryId = trajectoryId;
+		this.segments = segments;
+	}
+
+	/**
+	 * @return the trajectoryId
+	 */
+	public int getTrajectoryId() {
+		return trajectoryId;
+	}
+
+	/**
+	 * @param trajectoryId the trajectoryId to set
+	 */
+	public void setTrajectoryId(int trajectoryId) {
+		this.trajectoryId = trajectoryId;
+	}
+
+	/**
+	 * @return the segments
+	 */
+	public Vector<Segment> getSegments() {
+		return segments;
+	}
+
+	/**
+	 * @param segments the segments to set
+	 */
+	public void setSegments(Vector<Segment> segments) {
+		this.segments = segments;
+	} 
+}
