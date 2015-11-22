@@ -1,0 +1,161 @@
+package code;
+
+public class Segment {
+	private int segmentId;
+	private int objectId;
+	private double objectRange;
+	/**
+	 * @return the objectRange
+	 */
+	public double getObjectRange() {
+		return objectRange;
+	}
+	/**
+	 * @param objectRange the objectRange to set
+	 */
+	public void setObjectRange(double objectRange) {
+		this.objectRange = objectRange;
+	}
+	private int trajectoryId;
+	private String startDate; // dd/mm/yyyy
+	private String startTime; // hh:mm:ss
+	private double lat;
+	private double lon; //(lat, lon) is in WGS84 reference system
+	private double x;
+	private double y; //(x, y) is in GGRS87 reference system
+	public Segment() {
+		super();
+	}
+	public Segment(int segmentId, int objectId, int trajectoryId,
+			String startDate, String startTime, double lat, double lon, double x,
+			double y) {
+		super();
+		this.segmentId = segmentId;
+		this.objectId = objectId;
+		this.trajectoryId = trajectoryId;
+		this.startDate = startDate;
+		this.startTime = startTime;
+		this.lat = lat;
+		this.lon = lon;
+		this.x = x;
+		this.y = y;
+	}
+	/**
+	 * @return the segmentId
+	 */
+	public int getSegmentId() {
+		return segmentId;
+	}
+	/**
+	 * @param segmentId the segmentId to set
+	 */
+	public void setSegmentId(int segmentId) {
+		this.segmentId = segmentId;
+	}
+	/**
+	 * @return the objectId
+	 */
+	public int getObjectId() {
+		return objectId;
+	}
+	/**
+	 * @param objectId the objectId to set
+	 */
+	public void setObjectId(int objectId) {
+		this.objectId = objectId;
+	}
+	/**
+	 * @return the trajectoryId
+	 */
+	public int getTrajectoryId() {
+		return trajectoryId;
+	}
+	/**
+	 * @param trajectoryId the trajectoryId to set
+	 */
+	public void setTrajectoryId(int trajectoryId) {
+		this.trajectoryId = trajectoryId;
+	}
+	/**
+	 * @return the startDate
+	 */
+	public String getStartDate() {
+		return startDate;
+	}
+	/**
+	 * @param startDate the startDate to set
+	 */
+	public void setStartDate(String startDate) {
+		this.startDate = startDate;
+	}
+	/**
+	 * @return the startTime
+	 */
+	public String getStartTime() {
+		return startTime;
+	}
+	/**
+	 * @param startTime the startTime to set
+	 */
+	public void setStartTime(String startTime) {
+		this.startTime = startTime;
+	}
+	/**
+	 * @return the lat
+	 */
+	public double getLat() {
+		return lat;
+	}
+	/**
+	 * @param lat the lat to set
+	 */
+	public void setLat(double lat) {
+		this.lat = lat;
+	}
+	/**
+	 * @return the lon
+	 */
+	public double getLon() {
+		return lon;
+	}
+	/**
+	 * @param lon the lon to set
+	 */
+	public void setLon(double lon) {
+		this.lon = lon;
+	}
+	/**
+	 * @return the x
+	 */
+	public double getX() {
+		return x;
+	}
+	/**
+	 * @param x the x to set
+	 */
+	public void setX(double x) {
+		this.x = x;
+	}
+	/**
+	 * @return the y
+	 */
+	public double getY() {
+		return y;
+	}
+	/**
+	 * @param y the y to set
+	 */
+	public void setY(double y) {
+		this.y = y;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Segment [segmentId=" + segmentId + ", objectId=" + objectId
+				+ ", trajectoryId=" + trajectoryId + ", startDate=" + startDate
+				+ ", startTime=" + startTime + ", lat=" + lat + ", lon=" + lon
+				+ ", x=" + x + ", y=" + y + "]";
+	}
+}
