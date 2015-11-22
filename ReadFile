@@ -1,0 +1,165 @@
+package code;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.Vector;
+
+public class ReadFile {
+
+	private static QueryManager mQueryManager;
+
+	public static void readFileByLines(String fileName) {
+		File file = new File(fileName);
+		BufferedReader reader = null;
+		Vector<Segment> tempTrajectory = new Vector<Segment>();
+		Vector<Segment> trajectory = new Vector<Segment>();
+		Vector<Trajectory> allTrajectory = new Vector<Trajectory>();
+		// tempTrajectory = null;
+		try {
+			System.out.println("file name" + file);
+			reader = new BufferedReader(new FileReader(file));
+			String tempString = null;
+
+			int line = 1;
+
+			while ((tempString = reader.readLine()) != null) {
+
+				// System.out.println("line " + line + ": " + tempString);
+				String[] temps = tempString.split(";");
+
+				Segment s = new Segment();
+				s.setSegmentId(line);
+				int objId = Integer.parseInt(temps[0]);
+				s.setObjectId(objId);
+				int traId = Integer.parseInt(temps[0]);
+				s.setTrajectoryId(traId);
+				s.setStartDate(temps[2]);
+				s.setStartTime(temps[3]);
+				double lat = Double.parseDouble(temps[4]);
+				s.setLat(lat);
+				double lon = Double.parseDouble(temps[5]);
+				s.setLon(lon);
+				double x = Double.parseDouble(temps[6]);
+				s.setX(x);
+				double y = Double.parseDouble(temps[7]);
+				s.setY(y);
+
+				tempTrajectory.add(s);
+				line++;
+			}
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("file not exist");
+		}
+
+		// for(int i =0; i< tempTrajectory.size();i++){
+		//
+		// }
+		// for(int i =0; i< tempTrajectory.size();i++){
+		// System.out.println("segment##"+ tempTrajectory.get(i).toString());
+		// }
+		mQueryManager = new QueryManager(tempTrajectory);
+
+	}
+
+	public static void main(String[] args) {
+
+		ReadFile read = new ReadFile();
+		String fileName = "/Users/yinlu/Study/Code/workspace/trajectoryQuery/src/dataset/Trucks.txt";
+		read.readFileByLines(fileName);
+
+		Scanner sc = new Scanner(System.in);
+
+		System.out
+				.println("enter the object you want to query: please enter an integer");
+		int trajectory1 = sc.nextInt();
+		Trajectory t1 = mQueryManager.queryById(trajectory1);
+
+		System.out
+				.println("enter the object two you want to query: please enter an integer");
+		int trajectory2 = sc.nextInt();
+		Trajectory t2 = mQueryManager.queryById(trajectory2);
+
+		System.out
+				.println("enter the transmitting range for object 1: please enter an integer");
+		int range1 = sc.nextInt();
+		t1.getSegments().get(0).setObjectRange(range1 * 0.001);
+
+		System.out
+				.println("enter the transmitting range for object 2: please enter an integer");
+		int range2 = sc.nextInt();
+		t2.getSegments().get(0).setObjectRange(range2 * 0.001);
+
+		// System.out.println("enter the start date:(dd/MM/yyyy)");
+		// String start = sc.next();
+		// int startIndex1 = mQueryManager.selectIndex(t1,start);
+		// int startIndex2 = mQueryManager.selectIndex(t2,start);
+		// System.out.println("start index 1 " + startIndex1);
+		// System.out.println("start index 2 " + startIndex2);
+		//
+		// System.out.println("enter the end date:(dd/MM/yyyy)");
+		// String end = sc.next();
+		// int endIndex1 = mQueryManager.selectIndex(t1,end);
+		// int endIndex2 = mQueryManager.selectIndex(t2,end);
+		// System.out.println("end index 1 " + endIndex1);
+		// System.out.println("end index 2 " + endIndex2);
+		int[] range = mQueryManager.selectTimePeriod(t1, t2);
+
+		System.out
+				.println("===========================############################=======================");
+		System.out.println("Trajectory：" + trajectory1);
+		System.out.println("Trajectory：" + trajectory2);
+		System.out.println("Range1: "
+				+ t1.getSegments().get(0).getObjectRange());
+		System.out.println("Range2: "
+				+ t2.getSegments().get(0).getObjectRange());
+		if (range[0] != -1) {
+			System.out.println("************************");
+			// System.out.println("this result");
+
+			// long startTime1 = System.currentTimeMillis();
+			long startTime1 = System.nanoTime();
+
+			System.out.println("maxMemory1" + Runtime.getRuntime().maxMemory()/1048576);
+//			System.out.println("free memory1"
+//					+ Runtime.getRuntime().freeMemory());
+//			System.out.println("totalMemory1"
+//					+ Runtime.getRuntime().totalMemory());
+			System.out.println("this taken memory  "
+					+ (Runtime.getRuntime().totalMemory() - Runtime
+							.getRuntime().freeMemory())/1048576);
+			ArrayList<Integer> result = mQueryManager.findIntersection(t1, t2,
+					range[0], range[1], range[2], range[3]);
+			long endTime1 = System.nanoTime();
+			long startTime2 = System.nanoTime();
+//			System.out.println("maxMemory2" + Runtime.getRuntime().maxMemory());
+//			System.out.println("free memory2"
+//					+ Runtime.getRuntime().freeMemory());
+//			System.out.println("totalMemory2"
+//					+ Runtime.getRuntime().totalMemory());
+			System.out.println("simple taken memory  "
+					+ (Runtime.getRuntime().totalMemory() - Runtime
+							.getRuntime().freeMemory())/1048576);
+			mQueryManager.simpleSolution(t1, t2, range[0], range[1], range[2],
+					range[3]);
+			System.out.println(" |||result|||");
+			long endTime2 = System.nanoTime();
+			long timeConsum1 = endTime1 - startTime1;
+			long timeConsum2 = endTime2 - startTime2;
+			System.out.println("****time used***** ");
+			System.out.println("this algorithm time used "
+					+ timeConsum1 * 0.000001);
+			System.out.println("simple algorithm time used "
+					+ timeConsum2 * 0.000001);
+			result.toString();
+		} else {
+			System.out.println("two trajectories have no same time period");
+		}
+
+	}
+}
