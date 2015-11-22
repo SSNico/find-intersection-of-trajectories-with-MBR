@@ -1,0 +1,354 @@
+package code;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Vector;
+
+public class QueryManager {
+
+	private Vector<Segment> allSegment;
+
+	public QueryManager(Vector<Segment> allSegment) {
+		this.allSegment = allSegment;
+	}
+
+	public Trajectory queryById(int trajectoryId) {
+		Vector<Segment> target = new Vector<Segment>();
+		// target = null;
+		for (int i = 0; i < allSegment.size(); i++) {
+			if (allSegment.get(i).getTrajectoryId() == trajectoryId) {
+				target.add(allSegment.get(i));
+			}
+		}
+
+		Trajectory trajectory = new Trajectory();
+		if (target.size() != 0) {
+			trajectory.setTrajectoryId(trajectoryId);
+			trajectory.setSegments(target);
+			// for (int i = 0; i < trajectory.getSegments().size(); i++) {
+			// System.out.println("Target" + trajectoryId
+			// + trajectory.getSegments().get(i).toString());
+			// }
+		} else {
+			System.out.println("no such trajectory");
+		}
+		return trajectory;
+
+	}
+
+	public int[] selectTimePeriod(Trajectory t1, Trajectory t2) {
+
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+
+		String start1 = t1.getSegments().firstElement().getStartDate();
+		String start2 = t2.getSegments().firstElement().getStartDate();
+		String end1 = t1.getSegments().lastElement().getStartDate();
+		String end2 = t2.getSegments().lastElement().getStartDate();
+		// Date[] rangeDate = new Date[2];
+		int[] rangeIndex = new int[4];
+		Date rangeStart = null;
+		Date rangeEnd = null;
+
+		try {
+			Date startDate1 = format.parse(start1);
+			Date startDate2 = format.parse(start2);
+			Date endDate1 = format.parse(end1);
+			Date endDate2 = format.parse(end2);
+
+			if (startDate1.after(endDate2) || endDate1.before(startDate1)) {
+				System.out.println(",,,,,,,,,,,,,,,,,,,,,,,error orrrrrr");
+				rangeIndex[0] = -1;
+				rangeIndex[1] = -1;
+				rangeIndex[2] = -1;
+				rangeIndex[3] = -1;
+
+			} else {
+				if (startDate1.before(startDate2)) {
+					rangeStart = startDate2;
+				} else if (startDate1.after(startDate2)) {
+					rangeStart = startDate1;
+				} else {
+					// ====
+					rangeStart = startDate1;
+				}
+				if (endDate1.before(endDate2)) {
+					rangeEnd = endDate1;
+				} else if (endDate1.after(endDate2)) {
+					rangeEnd = endDate2;
+				} else {
+					// ======
+					rangeEnd = endDate1;
+				}
+			}
+
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// rangeDate[0] = rangeStart;
+		// rangeDate[1] = rangeEnd;
+		rangeIndex[0] = selectIndex(t1, rangeStart);
+		rangeIndex[1] = selectIndex(t1, rangeEnd);
+		rangeIndex[2] = selectIndex(t2, rangeStart);
+		rangeIndex[3] = selectIndex(t2, rangeEnd);
+
+		return rangeIndex;
+
+	}
+
+	public int selectIndex(Trajectory t, Date date) {
+		int index = -1;
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+
+		for (int i = 0; i < t.getSegments().size(); i++) {
+			Date formatDate;
+			try {
+				formatDate = format
+						.parse(t.getSegments().get(i).getStartDate());
+
+				if (formatDate.equals(date)) {
+					index = i;
+					break;
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+		}
+		if (index != -1) {
+			return index;
+		} else {
+			try {
+				// Date formatDate = format.parse(date);
+				Date firstFormatDate = format.parse(t.getSegments()
+						.firstElement().getStartDate());
+				Date lastFormatDate = format.parse(t.getSegments()
+						.lastElement().getStartDate());
+				if (date.before(firstFormatDate)) {
+					index = 0;
+				} else if (date.after(lastFormatDate)) {
+					index = t.getSegments().size() - 1;
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return index;
+		}
+	}
+
+	public double[] selectMBR(Trajectory t) {
+
+		double minX = 0;
+		double maxX = 0;
+		double minY = 0;
+		double maxY = 0;
+		double[] rectangle = new double[4];
+		// ArrayList rectangle = new ArrayList(4); // abcd
+		for (int i = 0; i < t.getSegments().size(); i++) {
+			if (t.getSegments().get(i).getX() < minX) {
+				minX = t.getSegments().get(i).getX();
+			} else if (t.getSegments().get(i).getX() > maxX) {
+				maxX = t.getSegments().get(i).getX();
+			} else if (t.getSegments().get(i).getY() < minY) {
+				minY = t.getSegments().get(i).getY();
+			} else if (t.getSegments().get(i).getY() > maxY) {
+				maxY = t.getSegments().get(i).getY();
+			}
+		}
+		minX = minX - t.getSegments().firstElement().getObjectRange();
+		maxX = maxX + t.getSegments().firstElement().getObjectRange();
+		minY = minY - t.getSegments().firstElement().getObjectRange();
+		maxY = maxY + t.getSegments().firstElement().getObjectRange();
+		rectangle[0] = minX;
+		rectangle[1] = maxX;
+		rectangle[2] = minY;
+		rectangle[3] = maxY;
+
+		return rectangle;
+
+	}
+
+	public double[] selectSubMBR(Trajectory t, int start, int end) {
+		// start, end. index of segment in trajectory t.
+		double minX = 1000000000;
+		double maxX = 0;
+		double minY = 1000000000;
+		double maxY = 0;
+		double[] subRectangle = new double[4];
+		for (int i = start; i < end; i++) {
+			if (t.getSegments().get(i).getX() < minX) {
+				minX = t.getSegments().get(i).getX();
+			} else if (t.getSegments().get(i).getX() > maxX) {
+				maxX = t.getSegments().get(i).getX();
+			} else if (t.getSegments().get(i).getY() < minY) {
+				minY = t.getSegments().get(i).getY();
+			} else if (t.getSegments().get(i).getY() > maxY) {
+				maxY = t.getSegments().get(i).getY();
+			}
+		}
+		minX = minX - t.getSegments().firstElement().getObjectRange();
+		maxX = maxX + t.getSegments().firstElement().getObjectRange();
+		minY = minY - t.getSegments().firstElement().getObjectRange();
+		maxY = maxY + t.getSegments().firstElement().getObjectRange();
+		subRectangle[0] = minX;
+		subRectangle[1] = maxX;
+		subRectangle[2] = minY;
+		subRectangle[3] = maxY;
+
+		return subRectangle;
+	}
+
+	public boolean overlap(Trajectory t1, Trajectory t2, int start1, int end1,
+			int start2, int end2) {
+		double[] rec1 = selectSubMBR(t1, start1, end1); // //(xm,xx,ym,yx)
+		double[] rec2 = selectSubMBR(t2, start2, end2);
+
+		if (rec2[0] > rec1[0] && rec2[0] < rec1[1]) {
+			if (rec2[2] > rec1[2] && rec2[2] < rec2[3]) {
+				return true;
+			} else if (rec2[3] > rec1[2] && rec2[3] < rec2[3]) {
+				return true;
+			} else {
+				return false;
+			}
+		} else if (rec2[1] > rec1[0] && rec2[1] < rec1[1]) {
+			if (rec2[2] > rec1[2] && rec2[2] < rec2[3]) {
+				return true;
+			} else if (rec2[3] > rec1[2] && rec2[3] < rec2[3]) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public ArrayList<Integer> findIntersection(Trajectory t1, Trajectory t2,
+			int start1, int end1, int start2, int end2) {
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+		//SimpleDateFormat format2 = new SimpleDateFormat("hh:mm:ss");
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		long midt1;
+		long midt2;
+		int mid1 =0;
+		int mid2=0;
+		
+		if (start1 == end1) {
+			result.add(start1);
+		} else {
+			
+			String startDate1 = t1.getSegments().get(start1).getStartDate();
+			String startTime1 = t1.getSegments().get(start1).getStartTime();
+			String startDate2 = t2.getSegments().get(start2).getStartDate();
+			String startTime2 = t2.getSegments().get(start2).getStartTime();
+			String endDate1 = t1.getSegments().get(end1).getStartDate();
+			String endTime1 = t1.getSegments().get(end1).getStartTime();
+			String endDate2 = t2.getSegments().get(end2).getStartDate();
+			String endTime2 = t2.getSegments().get(end2).getStartTime();
+			try {
+				Date formatDate1 = format.parse(startDate1+" "+startTime1);
+				Date formatDate2= format.parse(startDate2+" "+startTime2);
+				Date formatDate3 = format.parse(endDate1+" "+endTime1);
+				Date formatDate4 = format.parse(endDate2+" "+endTime2);
+				long startt1 = formatDate1.getTime();
+				long endt1 = formatDate3.getTime();
+				long startt2 = formatDate2.getTime();
+				long endt2 = formatDate4.getTime();
+				midt1 = (startt1+endt1)/2;
+				midt2 = (startt2+endt2)/2;
+				//Date formatTime = format2.parse(startTime1);
+				for(int i =start1;i<=end1;i++){
+					long time = format.parse(t1.getSegments().get(i).getStartDate()+" "+t1.getSegments().get(i).getStartTime()).getTime();
+					if(midt1<time){
+						mid1 =i;
+						//System.out.println("***first mid1**** "+mid1);
+						break;
+					}
+					
+				}
+				for(int i =start2;i<=end2;i++){
+					long time = format.parse(t2.getSegments().get(i).getStartDate()+" "+t2.getSegments().get(i).getStartTime()).getTime();
+					if(midt2<time){
+						mid2 = i;
+						//System.out.println("###first mid2### "+mid2);
+						break;
+						
+					}
+					
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			boolean firstHalf = overlap(t1, t2, start1, mid1, start2, mid2);
+			boolean lastHalf = overlap(t1, t2, mid1, end1, mid2, end2);
+			if (firstHalf == true && lastHalf ==false) {
+				//System.out.println("frist half true");
+				int newEnd1 = mid1 - 1;
+				int newEnd2 = mid2 - 1;
+				//System.out.println("=== this first half true "+ " new start "+ start1+ " new end "+ end1);
+				result.addAll(findIntersection(t1, t2, start1, newEnd1, start2,
+						newEnd2));
+				
+			}
+			else if (lastHalf == true&& firstHalf == false) {
+				//System.out.println("+++ last half true");
+				int newStart1 = mid1 + 1;
+				int newStart2 = mid2 + 1;
+				//System.out.println("*** this last half true "+ " new start "+ start1+ " new end "+ end1);
+				result.addAll(findIntersection(t1, t2, newStart1, end1, newStart2,
+						end2));
+			}else if(firstHalf == false && lastHalf == false) {
+				//System.out.println("no overlap");
+			}else{
+				//System.out.println("both");
+				int newEnd1 = mid1 - 1;
+				int newEnd2 = mid2 - 1;
+				int newStart1 = mid1 + 1;
+				int newStart2 = mid2 + 1;
+				result.addAll(findIntersection(t1, t2, start1, newEnd1, start2,
+						newEnd2));
+				result.addAll(findIntersection(t1, t2, newStart1, end1, newStart2,
+						end2));
+			}
+		}
+		// System.out.println(result.toString());
+		return result;
+
+	}
+
+	public double calDistance(Segment s1, Segment s2) {
+		double distance = Math.sqrt(Math.pow((s1.getX() - s2.getX()), 2)
+				+ Math.pow((s1.getY() - s2.getY()), 2));
+		return distance;
+	}
+
+	public void simpleSolution(Trajectory t1, Trajectory t2, int start1,
+			int end1, int start2, int end2) {
+		double distance = 0.0;
+		double range = t1.getSegments().firstElement().getObjectRange()
+				+ t2.getSegments().firstElement().getObjectRange();
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		for (int i = start1; i <= end1; i++) {
+			for (int j = start2; j <= end2; j++) {
+				if (t1.getSegments().get(i).getStartDate()
+						.equals(t1.getSegments().get(i).getStartDate())
+						&& t1.getSegments().get(i).getStartTime()
+								.equals(t1.getSegments().get(i).getStartTime())) {
+					distance = calDistance(t1.getSegments().get(i), t2
+							.getSegments().get(j));
+					if (distance < range) {
+						result.add(i);
+					}
+				}
+			}
+		}
+		System.out.println(result.toString());
+
+	}
+}
